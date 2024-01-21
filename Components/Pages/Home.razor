@@ -1,0 +1,76 @@
+﻿@page "/"
+
+@inject IDbContextFactory<ToDoContext> dbContextFactory
+
+<PageTitle>Home</PageTitle>
+
+<div class="container">
+	<div class="row">
+		<input type="text" class="col-sm-12" @bind-value="@descriptionInput">
+		<input type="button" class="col-sm-12" @onclick="(() => AddItem())" value="Добавить">
+	</div>
+	@foreach (var item in @items)
+	{
+		<div class="row">
+			<p class="col-sm-4">@item.Description</p>
+			@if (item.IsCompleted == 0)
+			{
+				<input type="checkbox" class="col-sm-4" @onclick="(() => ChangeItem(item))">
+			}
+			else
+			{
+				<input type="checkbox" class="col-sm-4" @onclick="(() => ChangeItem(item))" checked>
+			}
+			<input type="button" class="col-sm-4" @onclick="(() => DeleteItem(item))" value="Удалить">
+		</div>
+	}
+</div>
+
+@code {
+	private string descriptionInput = string.Empty;
+
+	private ToDoContext toDoContext = null!;
+	private List<Item> items = null!;
+
+	protected override void OnInitialized()
+	{
+		toDoContext = dbContextFactory.CreateDbContext();
+		items = toDoContext.Items.ToList();
+	}
+
+	private void AddItem()
+	{
+		Item item = new Item();
+		item.Description = descriptionInput;
+		item.IsCompleted = 0;
+
+		toDoContext.Items.Add(item);
+		toDoContext.SaveChanges();
+
+		items = toDoContext.Items.ToList();
+	}
+
+	private void ChangeItem(Item item)
+	{
+		if (item.IsCompleted == 0)
+		{
+			item.IsCompleted = 1;
+		}
+		else
+		{
+			item.IsCompleted = 0;
+		}
+
+		toDoContext.SaveChanges();
+
+		items = toDoContext.Items.ToList();
+	}
+
+	private void DeleteItem(Item item)
+	{
+		toDoContext.Items.Remove(item);
+		toDoContext.SaveChanges();
+
+		items = toDoContext.Items.ToList();
+	}
+}
